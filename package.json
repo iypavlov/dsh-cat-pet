@@ -1,0 +1,66 @@
+{
+  "name": "dsh-cat-pet",
+  "version": "0.1.0",
+  "description": "Pet — анимированный котик-компаньон для веб-интерфейса DeepSeek Harness (DSH)",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iypavlov/dsh-cat-pet.git"
+  },
+  "homepage": "https://github.com/iypavlov/dsh-cat-pet#readme",
+  "bugs": {
+    "url": "https://github.com/iypavlov/dsh-cat-pet/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "desktop-pet",
+    "cat",
+    "companion"
+  ],
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json",
+    "./assets/*": "./assets/*"
+  },
+  "files": [
+    "lib",
+    "assets",
+    "cordis.patch.yml",
+    "icon.svg"
+  ],
+  "scripts": {
+    "build": "node tools/build-atlas.mjs && tsdown && node tools/verify-client.mjs && node tools/verify-atlas-embed.mjs",
+    "dev": "tsdown --watch",
+    "sprites": "node tools/build-atlas.mjs",
+    "install-local": "node tools/install-local.mjs",
+    "verify": "node tools/verify-client.mjs && node tools/verify-runtime.mjs && node tools/verify-atlas-embed.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "pnpm typecheck && pnpm test && pnpm build && node tools/verify-runtime.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "tsdown": "^0.23.1",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.0"
+  }
+}

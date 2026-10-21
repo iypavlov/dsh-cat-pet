@@ -1,0 +1,9 @@
+# dsh-cat-pet bundle patch.
+#
+# Одна строка insert монтирует Host-половину плагина; браузерная половина
+# объявляется в package.json (dsh.client) и привязывается к этой строке —
+# поэтому name должен быть БЕЗ подпутей, т.е. ровно именем пакета.
+- insert:
+    - id: cat-pet
+      name: 'dsh-cat-pet'
+      config: {}

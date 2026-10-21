@@ -1,0 +1,14 @@
+# зависимости
+node_modules/
+
+# сборка (создаётся `pnpm build`, в репозиторий не кладётся)
+lib/
+
+# служебное
+*.log
+.vitest/
+.DS_Store
+Thumbs.db
+
+# резервная копия манифеста профиля от install-local.mjs
+package.json.bak
