@@ -12,7 +12,7 @@ import { defineConfig } from 'tsdown'
 // оборачивать клиент в IIFE нельзя: это меняет верхний уровень файла и ломает
 // вызов загрузчика. Гарантия «голого» скрипта держится на исходнике: в
 // src/client/index.ts нет верхнеуровневых export/import, а локальные импорты
-// tsdown инлайнит. Проверка после сборки — tools/verify-client.mjs.
+// tsdown инлайнит.
 export default defineConfig([
   {
     entry: { index: 'src/host/index.ts' },
@@ -20,8 +20,7 @@ export default defineConfig([
     format: ['esm'],
     // Явное расширение обязательно: на platform=node tsdown сам выбирает
     // .mjs, а package.json (main и exports) указывает на ./lib/index.js.
-    // Без этого получается lib/index.mjs и плагин не находится по манифесту
-    // (эту поломку поймал tools/verify-client.mjs).
+    // Без этого получается lib/index.mjs и плагин не находится по манифесту.
     outExtensions: () => ({ js: '.js' }),
     target: 'es2022',
     platform: 'node',

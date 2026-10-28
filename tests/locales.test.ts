@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { en, ru } from '../src/shared/locales'
 import { PET_SIZES } from '../src/shared/prefs'
-import { PET_STATES } from '../src/shared/states'
+import { PET_STATES } from '../src/shared/mood'
 
 describe('словари локали', () => {
   it('английский покрывает все русские ключи', () => {

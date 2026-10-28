@@ -2,8 +2,8 @@
  * Продвижение таймлайна анимации — чистая функция, покрытая тестами.
  *
  * Вынесена из плеера намеренно: это самая запутанная логика проекта
- * (переменные длительности кадров, зацикливание, одноразовые анимации,
- * догон после фриза вкладки), и её следует проверять без DOM и таймеров.
+ * (зацикливание, одноразовые анимации, догон после фриза вкладки),
+ * и её следует проверять без DOM и таймеров.
  */
 import { frameDuration, type AtlasAnimation } from './atlas'
 
@@ -14,9 +14,9 @@ export interface Timeline {
   index: number
   /**
    * Момент (в мс, по performance.now()), с которого отсчитывается
-   * длительность ТЕКУЩЕГО кадра. Сдвигается на длительность текущего
-   * кадра при каждом переходе — иначе при разных durations таймлайн
-   * разъезжается с реальным временем.
+   * длительность текущего кадра. Сдвигается на длительность текущего
+   * кадра при каждом переходе — иначе таймлайн разъезжается с реальным
+   * временем.
    */
   startedAt: number
   /** Одноразовая анимация доиграла и замерла на последнем кадре. */
@@ -39,9 +39,7 @@ export function advance(timeline: Timeline, anim: AtlasAnimation, now: number): 
   let guard = 0
 
   while (guard < MAX_CATCH_UP) {
-    // Длительность берём у ТЕКУЩЕГО кадра: при durations [500, 100, 100]
-    // именно она определяет, когда показывать следующий.
-    const current = frameDuration(anim, timeline.index)
+    const current = frameDuration(anim)
     if (now - timeline.startedAt < current) break
 
     guard += 1
@@ -64,7 +62,7 @@ export function advance(timeline: Timeline, anim: AtlasAnimation, now: number): 
   // Если вкладка была заморожена дольше, чем успели догнать, — сбрасываем
   // опорное время, а не копим долг: иначе анимация будет «ускоренной»
   // ещё много кадров после возврата.
-  if (guard >= MAX_CATCH_UP && now - timeline.startedAt > frameDuration(anim, timeline.index)) {
+  if (guard >= MAX_CATCH_UP && now - timeline.startedAt > frameDuration(anim)) {
     timeline.startedAt = now
   }
 
@@ -73,5 +71,5 @@ export function advance(timeline: Timeline, anim: AtlasAnimation, now: number): 
 
 /** Задержка до показа следующего кадра, мс. */
 export function nextDelay(timeline: Timeline, anim: AtlasAnimation): number {
-  return frameDuration(anim, timeline.index)
+  return frameDuration(anim)
 }

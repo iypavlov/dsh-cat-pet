@@ -4,7 +4,7 @@
  * снапшот (паттерн «сенсор + оверлей», так же устроены
  * dsh-chibi-pet и c-ling/dsh-plugin-pet).
  */
-import type { PetState } from './states'
+import type { PetState } from './mood'
 import { deriveState, type MoodFacts } from './mood'
 
 /**

@@ -72,17 +72,14 @@ describe('advance', () => {
   })
 
   // Это и есть регрессия: раньше startedAt сдвигался на длительность
-  // ПРЕДЫДУЩЕГО кадра, из-за чего при разных durations время разъезжалось.
-  it('использует длительность ТЕКУЩЕГО кадра при разных durations', () => {
-    const variable = anim(3, { durations: [500, 100, 100], fps: undefined })
+  // ПРЕДЫДУЩЕГО кадра, из-за чего таймлайн разъезжался с реальным временем.
+  it('сдвигает startedAt ровно на длительность текущего кадра', () => {
     const t = timeline()
-    // Первый кадр длится 500 мс: на 499 перехода нет.
-    expect(advance(t, variable, 499)).toBe(0)
-    expect(advance(t, variable, 500)).toBe(1)
-    expect(t.index).toBe(1)
-    // Второй кадр длится 100 мс: с 500 до 600 — ровно один переход.
-    expect(advance(t, variable, 600)).toBe(1)
-    expect(t.index).toBe(2)
+    // 250 мс при 100 мс/кадр → три перехода, опорное время на 300.
+    expect(advance(t, anim(8), 250)).toBe(2)
+    expect(t.startedAt).toBe(200)
+    expect(advance(t, anim(8), 300)).toBe(1)
+    expect(t.startedAt).toBe(300)
   })
 
   it('не зависает на анимации без кадров', () => {
@@ -101,9 +98,8 @@ describe('nextDelay', () => {
     expect(nextDelay(timeline({ index: 0 }), anim(4))).toBe(100)
   })
 
-  it('учитывает durations', () => {
-    const variable = anim(3, { durations: [500, 100, 100], fps: undefined })
-    expect(nextDelay(timeline({ index: 0 }), variable)).toBe(500)
-    expect(nextDelay(timeline({ index: 2 }), variable)).toBe(100)
+  it('не зависит от индекса кадра', () => {
+    expect(nextDelay(timeline({ index: 0 }), anim(4))).toBe(100)
+    expect(nextDelay(timeline({ index: 2 }), anim(4))).toBe(100)
   })
 })

@@ -19,7 +19,7 @@
  */
 import { createSignal } from '../shared/signal'
 import { INITIAL_SIGNAL, type SessionSignal } from '../shared/session'
-import { createPrefsStore } from '../shared/prefs-store'
+import { createPrefsStore } from '../shared/prefs'
 import { en, ru } from '../shared/locales'
 import { createCat } from './cat'
 import { createSensor } from './sensor'

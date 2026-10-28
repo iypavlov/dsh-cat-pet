@@ -6,7 +6,7 @@
  *    каждом ресайзе — питомец не может уехать за край (баг whale #13);
  *  - drag через pointer capture, 4px сопротивление клику;
  *  - проигрывание атласа — по таймингам кадров, пауза на скрытой
- *    вкладке и на скрытом питомце; без арта — canvas-заглушка;
+ *    вкладке и на скрытом питомце;
  *  - состояния приходят из модульного сигнала сенсора (см. sensor.ts),
  *    компонент не получает ctx и ничего не знает о сессиях.
  */
@@ -22,9 +22,8 @@ import {
 } from '../shared/position'
 import { signalToState, type SessionSignal } from '../shared/session'
 import type { Signal } from '../shared/signal'
-import { FALLBACK_STATE, type PetState } from '../shared/states'
+import { FALLBACK_STATE, type PetState } from '../shared/mood'
 import { sizeFor, type PetPrefs } from '../shared/prefs'
-import { drawPlaceholder } from './placeholder'
 import { createPlayer, type PlayerHandle, type SheetData } from './renderer'
 
 /** Перемещение меньше этой величины остаётся кликом. */
@@ -38,9 +37,6 @@ interface DragState {
   originY: number
   moved: boolean
 }
-
-/** Что сейчас на канвасе: спрайт из атласа, заглушка или ещё ничего. */
-type DrawnState = 'loading' | 'sprite' | 'placeholder'
 
 interface CatDeps {
   React: any
@@ -107,9 +103,10 @@ export function createCat(deps: CatDeps): (props: any) => unknown {
     // переменной, иначе .current станет any и потеряется проверка.
     const [position, setPosition]: [Point, (p: Point) => void] = useState(() => readStored(display))
     const [carrying, setCarrying] = useState(false)
-    const drawnState = useState('loading')
-    const drawn: DrawnState = drawnState[0]
-    const setDrawn: (next: DrawnState) => void = drawnState[1]
+    // true, когда плеер собрал атлас и первый кадр уже на канвасе. До этого
+    // момента атрибут состояния держим нейтральным, чтобы стили не мигали
+    // позой, которой на экране ещё нет.
+    const [drawn, setDrawn] = useState(false)
 
     const canvasRef: { current: HTMLCanvasElement | null } = useRef(null)
     const playerRef: { current: PlayerHandle | null } = useRef(null)
@@ -129,7 +126,7 @@ export function createCat(deps: CatDeps): (props: any) => unknown {
       setPosition(clamped)
     }
 
-    // ── монтирование: плеер атласа либо заглушка ────────────────────────────
+    // ── монтирование плеера атласа ──────────────────────────────────────────
     // Пересоздаётся при смене размера: канвас меняет физические пиксели,
     // и переиспользовать плеер с прежним DPR-бэкингом нельзя.
     useEffect(() => {
@@ -137,27 +134,18 @@ export function createCat(deps: CatDeps): (props: any) => unknown {
       if (!canvas) return undefined
       if (!settings.enabled) return undefined
 
-      const reduced = prefersReducedMotion()
       const player = createPlayer({
         canvas,
         sheet,
         display,
-        reducedMotion: reduced,
-        // Лист битый/не отдался — уходим в placeholder, а не в пустой canvas.
-        onDecodeError: () => {
-          drawPlaceholder(canvas, display.w)
-          setDrawn('placeholder')
-        },
+        reducedMotion: prefersReducedMotion(),
       })
       playerRef.current = player
 
       if (player.status === 'ready') {
-        setDrawn('sprite')
+        setDrawn(true)
         player.setState(stateRef.current)
         if (document.hidden) player.pause()
-      } else {
-        drawPlaceholder(canvas, display.w)
-        setDrawn('placeholder')
       }
 
       const onVisibility = (): void => {
@@ -265,7 +253,7 @@ export function createCat(deps: CatDeps): (props: any) => unknown {
     return h('canvas', {
       ref: canvasRef,
       className: 'dsh-cat-canvas',
-      'data-pet-state': drawn === 'sprite' ? state : 'idle',
+      'data-pet-state': drawn ? state : 'idle',
       // width/height АТРИБУТЫ здесь НЕ ставим: их выставляет плеер с учётом
       // DPR, а присвоение атрибута на каждом рендере сбрасывало бы битмап
       // канваса и стирало уже нарисованный кадр. Логический размер задаётся

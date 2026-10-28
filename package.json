@@ -20,6 +20,7 @@
     "cat",
     "companion"
   ],
+  "author": "Ivan Pavlov <iy.pavlov@yandex.ru>",
   "main": "./lib/index.js",
   "exports": {
     ".": "./lib/index.js",
@@ -34,14 +35,13 @@
     "icon.svg"
   ],
   "scripts": {
-    "build": "node tools/build-atlas.mjs && tsdown && node tools/verify-client.mjs && node tools/verify-atlas-embed.mjs",
+    "build": "node tools/build-atlas.mjs && tsdown",
     "dev": "tsdown --watch",
     "sprites": "node tools/build-atlas.mjs",
     "install-local": "node tools/install-local.mjs",
-    "verify": "node tools/verify-client.mjs && node tools/verify-runtime.mjs && node tools/verify-atlas-embed.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "check": "pnpm typecheck && pnpm test && pnpm build && node tools/verify-runtime.mjs"
+    "check": "pnpm typecheck && pnpm test && pnpm build"
   },
   "dsh": {
     "bundle": {

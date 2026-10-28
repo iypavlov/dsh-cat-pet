@@ -12,8 +12,8 @@
  *  - источник кадра — целые пиксели, при отрисовке — целые координаты.
  */
 import { missingAnimations, parseAtlas, type Atlas } from '../shared/atlas'
-import type { PetState } from '../shared/states'
-import { FALLBACK_STATE, isOneShot } from '../shared/states'
+import type { PetState } from '../shared/mood'
+import { FALLBACK_STATE, isOneShot } from '../shared/mood'
 import { advanceMood, transitionState } from '../shared/mood'
 import { advance, nextDelay, type Timeline } from '../shared/timeline'
 
@@ -30,25 +30,20 @@ interface PlayerOptions {
   /** CSS-размер отрисовки, px. */
   display: { w: number; h: number }
   reducedMotion: boolean
-  /** Лист не декодировался — вызывающая сторона рисует placeholder. */
-  onDecodeError?: () => void
 }
 
 /**
  * Итог создания плеера.
- *   ready   — атлас разобран, кадры рисуются;
- *   no-art  — арта нет (заглушка sprite-data), нужен placeholder;
+ *   ready     — атлас разобран, кадры рисуются;
+ *   no-art    — арта нет (заглушка sprite-data), плеер ничего не делает;
  *   bad-atlas — JSON атласа не прошёл валидацию.
- * Битый лист изображения сюда не входит: он приходит асинхронно через
- * onDecodeError, потому что ошибка декодирования возможна уже после
- * успешного создания плеера.
  */
 type PlayerStatus = 'ready' | 'no-art' | 'bad-atlas'
 
 /** Результат разбора листа: либо рабочий плеер, либо причина отказа. */
 export interface PlayerHandle {
   status: PlayerStatus
-  /** Отсутствующие анимации (warn в консоль, отрисовка идёт по фолбэку). */
+  /** Состояния, для которых в атласе нет своей анимации (уходят в sit). */
   missing: string[]
   setState(state: PetState): void
   pause(): void
@@ -62,7 +57,7 @@ interface PlayerTimeline extends Timeline {
 }
 
 export function createPlayer(options: PlayerOptions): PlayerHandle {
-  const { canvas, sheet, display, reducedMotion, onDecodeError } = options
+  const { canvas, sheet, display, reducedMotion } = options
   const context = canvas.getContext('2d')
   const noop: PlayerHandle = {
     status: 'no-art',
@@ -90,7 +85,7 @@ export function createPlayer(options: PlayerOptions): PlayerHandle {
 
   const missing = missingAnimations(atlas).map(String)
   if (missing.length > 0) {
-    console.warn(`[dsh-cat-pet] в атласе нет анимаций: ${missing.join(', ')} — будет фолбэк`)
+    console.warn(`[dsh-cat-pet] в атласе нет анимаций: ${missing.join(', ')} — будет sit`)
   }
 
   const image = new Image()
@@ -103,7 +98,6 @@ export function createPlayer(options: PlayerOptions): PlayerHandle {
   }, { once: true })
   image.addEventListener('error', () => {
     console.error('[dsh-cat-pet] не удалось декодировать spritesheet:', sheet.image)
-    onDecodeError?.()
   }, { once: true })
   image.src = sheet.image
 
@@ -122,15 +116,11 @@ export function createPlayer(options: PlayerOptions): PlayerHandle {
   let targetState: PetState = FALLBACK_STATE
 
   /**
-   * Какая анимация играет для состояния. Явного маппинга нет намеренно:
-   * фолбэк задаётся СОДЕРЖИМЫМ атласа, а не списком в коде — если в атласе
-   * не окажется, скажем, `sleep`, кошка отыграет `fallback` или `sit`,
-   * а не упадёт.
+   * Какая анимация играет для состояния. Если своей анимации у состояния
+   * нет, отыгрываем `sit`, иначе первую попавшуюся — лишь бы не упасть.
    */
   function animationFor(state: PetState): string {
     if (atlas.animations[state]) return state
-    const declaredFallback = atlas.fallback?.[state]
-    if (declaredFallback && atlas.animations[declaredFallback]) return declaredFallback
     if (atlas.animations[FALLBACK_STATE]) return FALLBACK_STATE
     return Object.keys(atlas.animations)[0]!
   }

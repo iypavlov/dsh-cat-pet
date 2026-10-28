@@ -24,7 +24,21 @@
  * поэтому после `lie` кошка должна «доехать» до `sleep`, а после `wake` —
  * вернуться в `sit`. Этим занимается advanceMood.
  */
-import { FALLBACK_STATE, type PetState } from './states'
+
+/** Состояния кошки: набор «бытовой», а не статус агента напрямую. */
+export const PET_STATES = ['sit', 'lie', 'sleep', 'wake'] as const
+
+export type PetState = (typeof PET_STATES)[number]
+
+/** Состояние по умолчанию и при любой нераспознанной ситуации. */
+export const FALLBACK_STATE: PetState = 'sit'
+
+/** Состояния-переходы: играются один раз и замирают на последнем кадре. */
+const ONE_SHOT_STATES: readonly PetState[] = ['lie', 'wake']
+
+export function isOneShot(state: PetState): boolean {
+  return ONE_SHOT_STATES.includes(state)
+}
 
 export interface MoodFacts {
   /** Агент в данный момент выполняет ход. */

@@ -9,7 +9,7 @@ import {
   SIZE_PX,
   sizeFor,
 } from '../src/shared/prefs'
-import { createPrefsStore } from '../src/shared/prefs-store'
+import { createPrefsStore } from '../src/shared/prefs'
 
 describe('normalizePrefs', () => {
   it('пропускает валидные значения', () => {
